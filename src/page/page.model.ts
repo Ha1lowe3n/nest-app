@@ -1,4 +1,4 @@
-enum PageCategories {
+export enum PageCategories {
 	Products,
 	Services,
 	Books,
