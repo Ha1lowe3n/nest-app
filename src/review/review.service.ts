@@ -24,7 +24,7 @@ export class ReviewService {
 		}
 	}
 
-	async getByProductId(productId: string): Promise<DocumentType<ReviewModel>[] | null> {
+	async findByProductId(productId: string): Promise<DocumentType<ReviewModel>[] | null> {
 		try {
 			return await this.reviewModel.find({ productId: new Types.ObjectId(productId) });
 		} catch (error) {
