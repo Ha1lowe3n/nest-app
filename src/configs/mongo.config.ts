@@ -5,7 +5,6 @@ export const getMongoConfig = async (
 	configService: ConfigService,
 ): Promise<TypegooseModuleOptions> => ({
 	uri: getMongoString(configService),
-	// ...getMongoOptions(),
 });
 
 const getMongoString = (configService: ConfigService): string => {
@@ -22,5 +21,3 @@ const getMongoString = (configService: ConfigService): string => {
 		configService.get('MONGO_AUTHDATABASE')
 	);
 };
-
-const getMongoOptions = () => ({});

@@ -7,6 +7,8 @@ import {
 	HttpStatus,
 	Param,
 	Post,
+	UsePipes,
+	ValidationPipe,
 } from '@nestjs/common';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { ReviewService } from './review.service';
@@ -18,6 +20,7 @@ import { ReviewErrorMessages } from '../errors/errors-messages';
 export class ReviewController {
 	constructor(private readonly reviewService: ReviewService) {}
 
+	@UsePipes(new ValidationPipe())
 	@Post('create')
 	async create(@Body() dto: CreateReviewDto): Promise<DocumentType<ReviewModel>> {
 		return await this.reviewService.create(dto);
@@ -36,7 +39,7 @@ export class ReviewController {
 	async getByProduct(
 		@Param('productId') productId: string,
 	): Promise<DocumentType<ReviewModel>[]> {
-		const result = await this.reviewService.getByProductId(productId);
+		const result = await this.reviewService.findByProductId(productId);
 		if (!result) {
 			throw new HttpException(ReviewErrorMessages.PRODUCT_ID_NOT_FOUND, HttpStatus.NOT_FOUND);
 		}
