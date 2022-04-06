@@ -15,11 +15,23 @@ export class ReviewService {
 	}
 
 	async delete(id: string): Promise<DocumentType<ReviewModel> | null> {
-		return await this.reviewModel.findByIdAndDelete(id);
+		try {
+			return await this.reviewModel.findByIdAndDelete(id);
+		} catch (error) {
+			if (error instanceof Error) {
+				return null;
+			}
+		}
 	}
 
-	async getByProductId(productId: string): Promise<DocumentType<ReviewModel>[]> {
-		return await this.reviewModel.find({ productId: new Types.ObjectId(productId) });
+	async getByProductId(productId: string): Promise<DocumentType<ReviewModel>[] | null> {
+		try {
+			return await this.reviewModel.find({ productId: new Types.ObjectId(productId) });
+		} catch (error) {
+			if (error instanceof Error) {
+				return null;
+			}
+		}
 	}
 
 	async deleteByProductId(productId: string): Promise<DeleteResult> {
