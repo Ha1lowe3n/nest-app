@@ -78,4 +78,76 @@ describe('AuthController (e2e)', () => {
 				});
 		});
 	});
+
+	describe('/auth/login (POST)', () => {
+		it('success - return token to user', async () => {
+			return request(app.getHttpServer())
+				.post('/auth/login')
+				.send(testAuthDto)
+				.expect(200)
+				.then(({ body }: request.Response) => {
+					expect(body.access_token).toBeDefined();
+				});
+		});
+
+		it('success - valid token', async () => {
+			return request(app.getHttpServer())
+				.post('/auth/login')
+				.send(testAuthDto)
+				.expect(200)
+				.then(({ body }: request.Response) => {
+					expect(body.access_token).toBeDefined();
+				});
+		});
+
+		it('fail - invalid email', async () => {
+			return request(app.getHttpServer())
+				.post('/auth/login')
+				.send({ ...testAuthDto, email: 'blabla@bla.ru' })
+				.expect(400)
+				.then(({ body }: request.Response) => {
+					expect(body.message).toBe(AuthErrorMessages.EMAIL_NOT_FOUND);
+				});
+		});
+
+		it('fail - invalid password', async () => {
+			return request(app.getHttpServer())
+				.post('/auth/login')
+				.send({ ...testAuthDto, password: '54321' })
+				.expect(400)
+				.then(({ body }: request.Response) => {
+					expect(body.message).toBe(AuthErrorMessages.PASSWORD_FAILED);
+				});
+		});
+
+		it('fail - validate error: invalid email', async () => {
+			return request(app.getHttpServer())
+				.post('/auth/login')
+				.send({ ...testAuthDto, email: 'email' })
+				.expect(400)
+				.then(({ body }: request.Response) => {
+					expect(body.message[0]).toBe(AuthErrorMessages.EMAIL_NOT_VALID);
+				});
+		});
+
+		it('fail - validate error: password too short', async () => {
+			return request(app.getHttpServer())
+				.post('/auth/login')
+				.send({ ...testAuthDto, password: '1' })
+				.expect(400)
+				.then(({ body }: request.Response) => {
+					expect(body.message[0]).toBe(AuthErrorMessages.PASSWORD_LONG);
+				});
+		});
+
+		it('fail - validate error: password too long', async () => {
+			return request(app.getHttpServer())
+				.post('/auth/login')
+				.send({ ...testAuthDto, password: '1234567890123456789012345678901234567890' })
+				.expect(400)
+				.then(({ body }: request.Response) => {
+					expect(body.message[0]).toBe(AuthErrorMessages.PASSWORD_LONG);
+				});
+		});
+	});
 });
