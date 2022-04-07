@@ -10,9 +10,8 @@ import { ReviewModule } from './review/review.module';
 
 @Module({
 	imports: [
-		ConfigModule.forRoot(),
+		ConfigModule.forRoot({ isGlobal: true }),
 		TypegooseModule.forRootAsync({
-			imports: [ConfigModule],
 			inject: [ConfigService],
 			useFactory: getMongoConfig,
 		}),

@@ -11,7 +11,7 @@ import { UserModel } from './user.model';
 export class AuthService {
 	constructor(
 		@InjectModel(UserModel) private readonly userModel: ModelType<UserModel>,
-		@Inject(JwtService) private readonly jwtService: JwtService,
+		private readonly jwtService: JwtService,
 	) {}
 
 	async createUser({ email, password }: AuthDto): Promise<DocumentType<UserModel>> {
