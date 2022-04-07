@@ -9,9 +9,8 @@ import { Module } from '@nestjs/common';
 
 @Module({
 	imports: [
-		ConfigModule.forRoot(),
+		ConfigModule.forRoot({ isGlobal: true }),
 		TypegooseModule.forRootAsync({
-			imports: [ConfigModule],
 			inject: [ConfigService],
 			useFactory: getMockMongoConfig,
 		}),

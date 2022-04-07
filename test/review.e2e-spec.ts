@@ -6,6 +6,7 @@ import { Types, disconnect } from 'mongoose';
 import { CreateReviewDto } from '../src/review/dto/create-review.dto';
 import { ReviewErrorMessages } from '../src/errors/errors-messages';
 import { MockAppModule } from './mock-app.module';
+import { AuthDto } from '../src/auth/dto/auth.dto';
 
 const productId = new Types.ObjectId().toHexString();
 const testCreateDto: CreateReviewDto = {
@@ -114,9 +115,21 @@ describe('ReviewController (e2e)', () => {
 	});
 
 	describe('/review/byProduct/:productId (GET)', () => {
+		const newUser: AuthDto = { email: 'token@mail.ru', password: 'givetoken' };
+		let token: string;
+
+		// just get token for correct work tests
+		it('get token', async () => {
+			const {
+				body: { access_token },
+			} = await request(app.getHttpServer()).post('/auth/login').send(newUser).expect(200);
+			token = access_token;
+		});
+
 		it('success', async () => {
 			return request(app.getHttpServer())
 				.get(`/review/byProduct/${productId}`)
+				.set('Authorization', 'Bearer ' + token)
 				.expect(200)
 				.then(({ body }: request.Response) => {
 					expect(body).toHaveLength(1);
@@ -124,10 +137,33 @@ describe('ReviewController (e2e)', () => {
 		});
 
 		it('fail', async () => {
-			return request(app.getHttpServer()).get(`/review/byProduct/1`).expect(404, {
-				statusCode: 404,
-				message: ReviewErrorMessages.PRODUCT_ID_NOT_FOUND,
-			});
+			return request(app.getHttpServer())
+				.get(`/review/byProduct/1`)
+				.set('Authorization', 'Bearer ' + token)
+				.expect(404, {
+					statusCode: 404,
+					message: ReviewErrorMessages.PRODUCT_ID_NOT_FOUND,
+				});
+		});
+
+		it('success - guard token', async () => {
+			return request(app.getHttpServer())
+				.get(`/review/byProduct/1`)
+				.set('Authorization', 'Bearer ' + token)
+				.expect(404, {
+					statusCode: 404,
+					message: ReviewErrorMessages.PRODUCT_ID_NOT_FOUND,
+				});
+		});
+
+		it('fail - guard token', async () => {
+			return request(app.getHttpServer())
+				.get(`/review/byProduct/1`)
+				.set('Authorization', 'Bearer ' + 'invalid token')
+				.expect(401, {
+					statusCode: 401,
+					message: 'Unauthorized',
+				});
 		});
 	});
 
