@@ -3,7 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { disconnect, Types } from 'mongoose';
 
-import { ProductErrorMessages } from '../src/errors/errors-messages';
+import { CommonErrorMessages, ProductErrorMessages } from '../src/errors/errors-messages';
 import { MockAppModule } from './mock-app.module';
 import { CreateProductDto } from '../src/product/dto/create-product.dto';
 import { UpdateProductDto } from '../src/product/dto/update-product.dto';
@@ -124,10 +124,17 @@ describe('ProductController (e2e)', () => {
 				});
 		});
 
-		it('success - get product by fake id', async () => {
+		it('fail - get product by fake id', async () => {
 			return request(app.getHttpServer()).get(`/product/${fakeId}`).expect(404, {
 				statusCode: 404,
 				message: ProductErrorMessages.PRODUCT_NOT_FOUND,
+			});
+		});
+
+		it('fail - get product by invalid id', async () => {
+			return request(app.getHttpServer()).get(`/product/${123}`).expect(400, {
+				statusCode: 400,
+				message: CommonErrorMessages.ID_VALIDATION_ERROR,
 			});
 		});
 	});
@@ -136,6 +143,7 @@ describe('ProductController (e2e)', () => {
 		const updateProductDto: UpdateProductDto = {
 			title: 'new title',
 		};
+
 		it('success - putch product', async () => {
 			return request(app.getHttpServer())
 				.patch(`/product/${productId}`)
@@ -144,6 +152,20 @@ describe('ProductController (e2e)', () => {
 				.then(({ body }: request.Response) => {
 					expect(body.title).toBe('new title');
 				});
+		});
+
+		it('fail - putch product by fake id', async () => {
+			return request(app.getHttpServer()).patch(`/product/${fakeId}`).expect(404, {
+				statusCode: 404,
+				message: ProductErrorMessages.PRODUCT_NOT_FOUND,
+			});
+		});
+
+		it('fail - putch product by invalid id', async () => {
+			return request(app.getHttpServer()).patch(`/product/${123}`).expect(400, {
+				statusCode: 400,
+				message: CommonErrorMessages.ID_VALIDATION_ERROR,
+			});
 		});
 	});
 
@@ -156,6 +178,13 @@ describe('ProductController (e2e)', () => {
 			return request(app.getHttpServer()).delete(`/product/${fakeId}`).expect(404, {
 				statusCode: 404,
 				message: ProductErrorMessages.PRODUCT_NOT_FOUND,
+			});
+		});
+
+		it('fail - get product by invalid id', async () => {
+			return request(app.getHttpServer()).patch(`/product/${123}`).expect(400, {
+				statusCode: 400,
+				message: CommonErrorMessages.ID_VALIDATION_ERROR,
 			});
 		});
 	});

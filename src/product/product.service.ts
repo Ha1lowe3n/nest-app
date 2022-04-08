@@ -41,7 +41,11 @@ export class ProductService {
 	}
 
 	async updateById(id: string, dto: UpdateProductDto): Promise<DocumentType<ProductModel>> {
-		return this.productModel.findByIdAndUpdate(id, dto, { new: true });
+		const updatedProduct = await this.productModel.findByIdAndUpdate(id, dto, { new: true });
+		if (!updatedProduct) {
+			throw new HttpException(ProductErrorMessages.PRODUCT_NOT_FOUND, HttpStatus.NOT_FOUND);
+		}
+		return updatedProduct;
 	}
 
 	async findWithReviews(dto: FindProductDto): Promise<FindWithReviewsType> {

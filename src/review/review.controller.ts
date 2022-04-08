@@ -3,20 +3,19 @@ import {
 	Controller,
 	Delete,
 	Get,
-	HttpException,
-	HttpStatus,
 	Param,
 	Post,
 	UseGuards,
 	UsePipes,
 	ValidationPipe,
 } from '@nestjs/common';
+import { DeleteResult } from 'mongodb';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { ReviewService } from './review.service';
 import { DocumentType } from '@typegoose/typegoose/lib/types';
 import { ReviewModel } from './review.model';
-import { ReviewErrorMessages } from '../errors/errors-messages';
 import { AuthGuard } from '@nestjs/passport';
+import { IdValidationPipe } from '../pipes/id-validation.pipe';
 
 @Controller('review')
 export class ReviewController {
@@ -30,23 +29,25 @@ export class ReviewController {
 
 	@UseGuards(AuthGuard('jwt'))
 	@Delete(':id')
-	async delete(@Param('id') id: string): Promise<DocumentType<ReviewModel> | null> {
-		const deletedReview = await this.reviewService.delete(id);
-		if (!deletedReview) {
-			throw new HttpException(ReviewErrorMessages.REVIEW_NOT_FOUND, HttpStatus.NOT_FOUND);
-		}
-		return deletedReview;
+	async delete(
+		@Param('id', IdValidationPipe) id: string,
+	): Promise<DocumentType<ReviewModel> | null> {
+		return await this.reviewService.delete(id);
 	}
 
 	@UseGuards(AuthGuard('jwt'))
 	@Get('byProduct/:productId')
 	async getByProduct(
-		@Param('productId') productId: string,
+		@Param('productId', IdValidationPipe) productId: string,
 	): Promise<DocumentType<ReviewModel>[]> {
-		const result = await this.reviewService.findByProductId(productId);
-		if (!result) {
-			throw new HttpException(ReviewErrorMessages.PRODUCT_ID_NOT_FOUND, HttpStatus.NOT_FOUND);
-		}
-		return result;
+		return await this.reviewService.findByProductId(productId);
+	}
+
+	@UseGuards(AuthGuard('jwt'))
+	@Delete('byProduct/:productId')
+	async deleteByProduct(
+		@Param('productId', IdValidationPipe) productId: string,
+	): Promise<DeleteResult> {
+		return await this.reviewService.deleteByProductId(productId);
 	}
 }

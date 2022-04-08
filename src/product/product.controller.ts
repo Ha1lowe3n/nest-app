@@ -11,6 +11,7 @@ import {
 	ValidationPipe,
 } from '@nestjs/common';
 import { DocumentType } from '@typegoose/typegoose/lib/types';
+import { IdValidationPipe } from '../pipes/id-validation.pipe';
 import { CreateProductDto } from './dto/create-product.dto';
 import { FindProductDto } from './dto/find-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -28,20 +29,24 @@ export class ProductController {
 	}
 
 	@Get(':productId')
-	async get(@Param('productId') productId: string): Promise<DocumentType<ProductModel>> {
+	async get(
+		@Param('productId', IdValidationPipe) productId: string,
+	): Promise<DocumentType<ProductModel>> {
 		return await this.productService.findById(productId);
 	}
 
 	@Patch(':productId')
 	async update(
-		@Param('productId') productId: string,
+		@Param('productId', IdValidationPipe) productId: string,
 		@Body() dto: UpdateProductDto,
 	): Promise<DocumentType<ProductModel>> {
 		return await this.productService.updateById(productId, dto);
 	}
 
 	@Delete(':productId')
-	async delete(@Param('productId') productId: string): Promise<DocumentType<ProductModel>> {
+	async delete(
+		@Param('productId', IdValidationPipe) productId: string,
+	): Promise<DocumentType<ProductModel>> {
 		return await this.productService.deleteById(productId);
 	}
 

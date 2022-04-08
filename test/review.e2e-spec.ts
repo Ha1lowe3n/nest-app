@@ -4,25 +4,25 @@ import * as request from 'supertest';
 import { Types, disconnect } from 'mongoose';
 
 import { CreateReviewDto } from '../src/review/dto/create-review.dto';
-import { ReviewErrorMessages } from '../src/errors/errors-messages';
+import { CommonErrorMessages, ReviewErrorMessages } from '../src/errors/errors-messages';
 import { MockAppModule } from './mock-app.module';
 import { AuthDto } from '../src/auth/dto/auth.dto';
-
-const productId = new Types.ObjectId().toHexString();
-const testCreateDto: CreateReviewDto = {
-	authorName: 'name author',
-	description: 'description review',
-	rating: 5,
-	title: 'title review',
-	productId,
-};
 
 describe('ReviewController (e2e)', () => {
 	let app: INestApplication;
 	let createdId: string;
 	let token: string;
 
+	const productId = new Types.ObjectId().toHexString();
+	const testCreateDto: CreateReviewDto = {
+		authorName: 'name author',
+		description: 'description review',
+		rating: 5,
+		title: 'title review',
+		productId,
+	};
 	const newUser: AuthDto = { email: 'token@mail.ru', password: 'givetoken' };
+	const fakeID = new Types.ObjectId().toHexString();
 
 	beforeEach(async () => {
 		const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -132,7 +132,7 @@ describe('ReviewController (e2e)', () => {
 	});
 
 	describe('/review/byProduct/:productId (GET)', () => {
-		it('success', async () => {
+		it('success - delete reviews by product id', async () => {
 			return request(app.getHttpServer())
 				.get(`/review/byProduct/${productId}`)
 				.set('Authorization', 'Bearer ' + token)
@@ -142,9 +142,9 @@ describe('ReviewController (e2e)', () => {
 				});
 		});
 
-		it('fail', async () => {
+		it('fail - get reviews by fake id', async () => {
 			return request(app.getHttpServer())
-				.get(`/review/byProduct/1`)
+				.get(`/review/byProduct/${fakeID}`)
 				.set('Authorization', 'Bearer ' + token)
 				.expect(404, {
 					statusCode: 404,
@@ -152,9 +152,19 @@ describe('ReviewController (e2e)', () => {
 				});
 		});
 
-		it('success - guard token', async () => {
+		it('fail - get reviews by ivalid id', async () => {
 			return request(app.getHttpServer())
 				.get(`/review/byProduct/1`)
+				.set('Authorization', 'Bearer ' + token)
+				.expect(400, {
+					statusCode: 400,
+					message: CommonErrorMessages.ID_VALIDATION_ERROR,
+				});
+		});
+
+		it('success - guard token', async () => {
+			return request(app.getHttpServer())
+				.get(`/review/byProduct/${fakeID}`)
 				.set('Authorization', 'Bearer ' + token)
 				.expect(404, {
 					statusCode: 404,
@@ -164,7 +174,7 @@ describe('ReviewController (e2e)', () => {
 
 		it('fail - guard token', async () => {
 			return request(app.getHttpServer())
-				.get(`/review/byProduct/1`)
+				.get(`/review/byProduct/${fakeID}`)
 				.set('Authorization', 'Bearer ' + 'invalid token')
 				.expect(401, {
 					statusCode: 401,
@@ -181,13 +191,61 @@ describe('ReviewController (e2e)', () => {
 				.expect(200);
 		});
 
-		it('fail', () => {
+		it('fail - fake id', () => {
 			return request(app.getHttpServer())
-				.delete('/review/1')
+				.delete(`/review/${fakeID}`)
 				.set('Authorization', 'Bearer ' + token)
 				.expect(404, {
 					statusCode: 404,
 					message: ReviewErrorMessages.REVIEW_NOT_FOUND,
+				});
+		});
+
+		it('fail - invalid id', () => {
+			return request(app.getHttpServer())
+				.delete(`/review/$1`)
+				.set('Authorization', 'Bearer ' + token)
+				.expect(400, {
+					statusCode: 400,
+					message: CommonErrorMessages.ID_VALIDATION_ERROR,
+				});
+		});
+	});
+
+	describe('/byProduct/:productId (DELETE)', () => {
+		it('success - delete reviews by product id', async () => {
+			await request(app.getHttpServer())
+				.post('/review/create')
+				.send(testCreateDto)
+				.expect(201);
+			await request(app.getHttpServer())
+				.post('/review/create')
+				.send({ ...testCreateDto, authorName: 'test 2' })
+				.expect(201);
+
+			return request(app.getHttpServer())
+				.delete(`/review/byProduct/${productId}`)
+				.set('Authorization', 'Bearer ' + token)
+				.expect(200);
+		});
+
+		it('fail - fake id', () => {
+			return request(app.getHttpServer())
+				.delete(`/review/byProduct/${fakeID}`)
+				.set('Authorization', 'Bearer ' + token)
+				.expect(404, {
+					statusCode: 404,
+					message: ReviewErrorMessages.PRODUCT_ID_NOT_FOUND,
+				});
+		});
+
+		it('fail - invalid id', () => {
+			return request(app.getHttpServer())
+				.delete(`/review/byProduct/1`)
+				.set('Authorization', 'Bearer ' + token)
+				.expect(400, {
+					statusCode: 400,
+					message: CommonErrorMessages.ID_VALIDATION_ERROR,
 				});
 		});
 	});
