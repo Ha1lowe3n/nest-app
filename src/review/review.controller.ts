@@ -7,7 +7,6 @@ import {
 	HttpStatus,
 	Param,
 	Post,
-	Req,
 	UseGuards,
 	UsePipes,
 	ValidationPipe,
@@ -18,7 +17,6 @@ import { DocumentType } from '@typegoose/typegoose/lib/types';
 import { ReviewModel } from './review.model';
 import { ReviewErrorMessages } from '../errors/errors-messages';
 import { AuthGuard } from '@nestjs/passport';
-import { Request } from 'express';
 
 @Controller('review')
 export class ReviewController {
@@ -30,6 +28,7 @@ export class ReviewController {
 		return await this.reviewService.create(dto);
 	}
 
+	@UseGuards(AuthGuard('jwt'))
 	@Delete(':id')
 	async delete(@Param('id') id: string): Promise<DocumentType<ReviewModel> | null> {
 		const deletedReview = await this.reviewService.delete(id);
@@ -43,9 +42,7 @@ export class ReviewController {
 	@Get('byProduct/:productId')
 	async getByProduct(
 		@Param('productId') productId: string,
-		@Req() request: Request,
 	): Promise<DocumentType<ReviewModel>[]> {
-		console.log(request.user);
 		const result = await this.reviewService.findByProductId(productId);
 		if (!result) {
 			throw new HttpException(ReviewErrorMessages.PRODUCT_ID_NOT_FOUND, HttpStatus.NOT_FOUND);

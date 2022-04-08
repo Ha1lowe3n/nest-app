@@ -4,7 +4,7 @@ import { AuthController } from './auth.controller';
 import { TypegooseModule } from 'nestjs-typegoose';
 import { UserModel } from './user.model';
 import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import { getJwtConfig } from '../configs/jwt.config';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { PassportModule } from '@nestjs/passport';

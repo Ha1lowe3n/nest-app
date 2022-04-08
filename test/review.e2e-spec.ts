@@ -20,6 +20,9 @@ const testCreateDto: CreateReviewDto = {
 describe('ReviewController (e2e)', () => {
 	let app: INestApplication;
 	let createdId: string;
+	let token: string;
+
+	const newUser: AuthDto = { email: 'token@mail.ru', password: 'givetoken' };
 
 	beforeEach(async () => {
 		const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -28,6 +31,20 @@ describe('ReviewController (e2e)', () => {
 
 		app = moduleFixture.createNestApplication();
 		await app.init();
+
+		const {
+			body: { access_token },
+		} = await request(app.getHttpServer()).post('/auth/login').send(newUser);
+
+		if (!access_token) {
+			await request(app.getHttpServer()).post('/auth/register').send(newUser).expect(201);
+			const {
+				body: { access_token },
+			} = await request(app.getHttpServer()).post('/auth/login').send(newUser).expect(200);
+			token = access_token;
+		} else {
+			token = access_token;
+		}
 	});
 
 	afterAll(() => disconnect());
@@ -115,17 +132,6 @@ describe('ReviewController (e2e)', () => {
 	});
 
 	describe('/review/byProduct/:productId (GET)', () => {
-		const newUser: AuthDto = { email: 'token@mail.ru', password: 'givetoken' };
-		let token: string;
-
-		// just get token for correct work tests
-		it('get token', async () => {
-			const {
-				body: { access_token },
-			} = await request(app.getHttpServer()).post('/auth/login').send(newUser).expect(200);
-			token = access_token;
-		});
-
 		it('success', async () => {
 			return request(app.getHttpServer())
 				.get(`/review/byProduct/${productId}`)
@@ -171,14 +177,18 @@ describe('ReviewController (e2e)', () => {
 		it('success', () => {
 			return request(app.getHttpServer())
 				.delete('/review/' + createdId)
+				.set('Authorization', 'Bearer ' + token)
 				.expect(200);
 		});
 
 		it('fail', () => {
-			return request(app.getHttpServer()).delete('/review/1').expect(404, {
-				statusCode: 404,
-				message: ReviewErrorMessages.REVIEW_NOT_FOUND,
-			});
+			return request(app.getHttpServer())
+				.delete('/review/1')
+				.set('Authorization', 'Bearer ' + token)
+				.expect(404, {
+					statusCode: 404,
+					message: ReviewErrorMessages.REVIEW_NOT_FOUND,
+				});
 		});
 	});
 });

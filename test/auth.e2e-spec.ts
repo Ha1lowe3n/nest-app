@@ -1,19 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { disconnect } from 'mongoose';
+import { disconnect, Types } from 'mongoose';
 
 import { AuthErrorMessages } from '../src/errors/errors-messages';
 import { MockAppModule } from './mock-app.module';
 import { AuthDto } from '../src/auth/dto/auth.dto';
 
-const testAuthDto: AuthDto = {
-	email: 'test@test.com',
-	password: '12345',
-};
-
 describe('AuthController (e2e)', () => {
 	let app: INestApplication;
+	let userId: string;
+
+	const testAuthDto: AuthDto = {
+		email: 'test@test.com',
+		password: '12345',
+	};
 
 	beforeEach(async () => {
 		const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -33,6 +34,7 @@ describe('AuthController (e2e)', () => {
 				.send(testAuthDto)
 				.expect(201)
 				.then(({ body }: request.Response) => {
+					userId = body._id;
 					expect(body.email).toBe(testAuthDto.email);
 				});
 		});
@@ -43,7 +45,6 @@ describe('AuthController (e2e)', () => {
 				.send(testAuthDto)
 				.expect(409)
 				.then(({ body }: request.Response) => {
-					console.log(body);
 					expect(body.message).toBe(AuthErrorMessages.EMAIL_ALREADY_REGISTERED);
 				});
 		});
@@ -81,16 +82,6 @@ describe('AuthController (e2e)', () => {
 
 	describe('/auth/login (POST)', () => {
 		it('success - return token to user', async () => {
-			return request(app.getHttpServer())
-				.post('/auth/login')
-				.send(testAuthDto)
-				.expect(200)
-				.then(({ body }: request.Response) => {
-					expect(body.access_token).toBeDefined();
-				});
-		});
-
-		it('success - valid token', async () => {
 			return request(app.getHttpServer())
 				.post('/auth/login')
 				.send(testAuthDto)
@@ -148,6 +139,19 @@ describe('AuthController (e2e)', () => {
 				.then(({ body }: request.Response) => {
 					expect(body.message[0]).toBe(AuthErrorMessages.PASSWORD_LONG);
 				});
+		});
+	});
+
+	describe('/auth/delete/:id (DELETE)', () => {
+		it('success - delete user', async () => {
+			return request(app.getHttpServer()).delete(`/auth/delete/${userId}`).expect(200);
+		});
+
+		it('fail - delete nonexistent user', async () => {
+			const fakeId = new Types.ObjectId().toHexString();
+			return request(app.getHttpServer())
+				.delete(`/auth/delete/${fakeId}`)
+				.expect(404, { statusCode: 404, message: AuthErrorMessages.USER_NOT_FOUND });
 		});
 	});
 });

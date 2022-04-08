@@ -12,4 +12,9 @@ export const AuthErrorMessages = {
 	EMAIL_ALREADY_REGISTERED: 'Такой email уже зарегистрирован',
 	EMAIL_NOT_FOUND: 'Пользователь с таким email не зарегистрирован',
 	PASSWORD_FAILED: 'Неверный пароль',
+	USER_NOT_FOUND: 'Пользователь не найден',
+};
+
+export const ProductErrorMessages = {
+	PRODUCT_NOT_FOUND: 'Продукт не найден',
 };

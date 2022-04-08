@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ModelType, DocumentType } from '@typegoose/typegoose/lib/types';
 import { compare, hash } from 'bcrypt';
@@ -43,5 +43,13 @@ export class AuthService {
 	async login(email: string): Promise<{ access_token: string }> {
 		const payload = { email };
 		return { access_token: await this.jwtService.signAsync(payload) };
+	}
+
+	async delete(id: string): Promise<DocumentType<UserModel>> {
+		const deletedUser = await this.userModel.findByIdAndDelete(id);
+		if (!deletedUser) {
+			throw new HttpException(AuthErrorMessages.USER_NOT_FOUND, HttpStatus.NOT_FOUND);
+		}
+		return deletedUser;
 	}
 }
