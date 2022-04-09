@@ -98,6 +98,7 @@ describe('ProductController (e2e)', () => {
 			expect(body[0].reviewsCount).toBe(2);
 			expect(body[0].reviews).toHaveLength(2);
 			expect(body[0].reviewsAvg).toBe(5);
+			expect(body[0].reviews[0].createdAt > body[0].reviews[1].createdAt).toBeTruthy();
 		});
 	});
 

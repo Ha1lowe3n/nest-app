@@ -14,10 +14,10 @@ export class PageController {
 	async get(@Param(':id') id: string): Promise<void> {}
 
 	@Patch(':id')
-	async update(@Param(':id') id: string, @Body() dto: Partial<PageModel>): Promise<void> {}
+	async update(@Param('id') id: string, @Body() dto: Partial<PageModel>): Promise<void> {}
 
 	@Delete(':id')
-	async delete(@Param(':id') id: string): Promise<void> {}
+	async delete(@Param('id') id: string): Promise<void> {}
 
 	@HttpCode(200)
 	@Post()

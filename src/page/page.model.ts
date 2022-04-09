@@ -21,7 +21,7 @@ class HHData {
 	@prop()
 	seniorSalary: number;
 }
-class Advantages {
+class Advantage {
 	@prop()
 	title: string;
 
@@ -49,8 +49,8 @@ export class PageModel extends TimeStamps {
 	@prop()
 	hh?: HHData;
 
-	@prop({ type: () => [Advantages] })
-	advantages: Advantages[];
+	@prop({ type: () => Advantage })
+	advantages: Advantage[];
 
 	@prop()
 	seoText: string;
