@@ -7,9 +7,11 @@ import {
 	Param,
 	Patch,
 	Post,
+	UseGuards,
 	UsePipes,
 	ValidationPipe,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { DocumentType } from '@typegoose/typegoose/lib/types';
 import { IdValidationPipe } from '../pipes/id-validation.pipe';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -22,12 +24,14 @@ import { FindWithReviewsType, ProductService } from './product.service';
 export class ProductController {
 	constructor(private readonly productService: ProductService) {}
 
+	@UseGuards(AuthGuard('jwt'))
 	@UsePipes(new ValidationPipe())
 	@Post('create')
 	async create(@Body() dto: CreateProductDto): Promise<DocumentType<ProductModel>> {
 		return await this.productService.create(dto);
 	}
 
+	@UseGuards(AuthGuard('jwt'))
 	@Get(':productId')
 	async get(
 		@Param('productId', IdValidationPipe) productId: string,
@@ -35,6 +39,7 @@ export class ProductController {
 		return await this.productService.findById(productId);
 	}
 
+	@UseGuards(AuthGuard('jwt'))
 	@Patch(':productId')
 	async update(
 		@Param('productId', IdValidationPipe) productId: string,
@@ -43,6 +48,7 @@ export class ProductController {
 		return await this.productService.updateById(productId, dto);
 	}
 
+	@UseGuards(AuthGuard('jwt'))
 	@Delete(':productId')
 	async delete(
 		@Param('productId', IdValidationPipe) productId: string,

@@ -22,3 +22,7 @@ export const AuthErrorMessages = {
 export const ProductErrorMessages = {
 	PRODUCT_NOT_FOUND: 'Продукт не найден',
 };
+
+export const PageErrorMessages = {
+	PAGE_NOT_FOUND: 'Страница не найдена',
+};
