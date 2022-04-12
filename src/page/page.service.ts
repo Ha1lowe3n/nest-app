@@ -41,12 +41,16 @@ export class PageService {
 	async findByCategory(
 		pageCategory: PageCategories,
 	): Promise<Pick<DocumentType<PageModel>, 'alias' | 'pageCategory' | 'subPageCategory'>[]> {
-		const pages = await this.pageModel.find(
-			{ pageCategory },
-			{ alias: 1, pageCategory: 1, subPageCategory: 1 },
-		);
+		const pages = await this.pageModel
+			.aggregate()
+			.match({ pageCategory })
+			.group({
+				_id: { subPageCategory: '$subPageCategory' },
+				pages: { $push: { alias: '$alias', title: '$title' } },
+			});
+
 		if (!pages.length) {
-			throw new HttpException(PageErrorMessages.PAGE_NOT_FOUND, HttpStatus.NOT_FOUND);
+			throw new HttpException(PageErrorMessages.PAGES_NOT_FOUND, HttpStatus.NOT_FOUND);
 		}
 		return pages;
 	}
@@ -57,5 +61,15 @@ export class PageService {
 			throw new HttpException(PageErrorMessages.PAGE_NOT_FOUND, HttpStatus.NOT_FOUND);
 		}
 		return page;
+	}
+
+	async findByText(text: string): Promise<DocumentType<PageModel>[]> {
+		const pages = await this.pageModel.find({
+			$text: { $search: text, $caseSensitive: false },
+		});
+		if (!pages.length) {
+			throw new HttpException(PageErrorMessages.PAGES_NOT_FOUND, HttpStatus.NOT_FOUND);
+		}
+		return pages;
 	}
 }

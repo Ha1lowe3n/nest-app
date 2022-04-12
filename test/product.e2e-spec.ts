@@ -9,10 +9,12 @@ import { CreateProductDto } from '../src/product/dto/create-product.dto';
 import { UpdateProductDto } from '../src/product/dto/update-product.dto';
 import { FindProductDto } from '../src/product/dto/find-product.dto';
 import { CreateReviewDto } from '../src/review/dto/create-review.dto';
+import { AuthDto } from '../src/auth/dto/auth.dto';
 
 describe('ProductController (e2e)', () => {
 	let app: INestApplication;
 	let productId: string;
+	let token: string;
 
 	const testCreateProductDto: CreateProductDto = {
 		image: 'some image',
@@ -35,6 +37,7 @@ describe('ProductController (e2e)', () => {
 		limit: 5,
 	};
 	const fakeId = new Types.ObjectId().toHexString();
+	const newUser: AuthDto = { email: 'token@mail.ru', password: 'givetoken' };
 
 	beforeEach(async () => {
 		const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -43,6 +46,20 @@ describe('ProductController (e2e)', () => {
 
 		app = moduleFixture.createNestApplication();
 		await app.init();
+
+		const {
+			body: { access_token },
+		} = await request(app.getHttpServer()).post('/auth/login').send(newUser);
+
+		if (!access_token) {
+			await request(app.getHttpServer()).post('/auth/register').send(newUser).expect(201);
+			const {
+				body: { access_token },
+			} = await request(app.getHttpServer()).post('/auth/login').send(newUser).expect(200);
+			token = access_token;
+		} else {
+			token = access_token;
+		}
 	});
 
 	afterAll(async () => await disconnect());
@@ -51,6 +68,7 @@ describe('ProductController (e2e)', () => {
 		it('success - create new product', async () => {
 			return request(app.getHttpServer())
 				.post('/product/create')
+				.set('Authorization', 'Bearer ' + token)
 				.send(testCreateProductDto)
 				.expect(201)
 				.then(({ body }: request.Response) => {
@@ -106,6 +124,7 @@ describe('ProductController (e2e)', () => {
 		it('success - get product by id', async () => {
 			return request(app.getHttpServer())
 				.get(`/product/${productId}`)
+				.set('Authorization', 'Bearer ' + token)
 				.expect(200)
 				.then(({ body }: request.Response) => {
 					expect(body._id).toBeDefined();
@@ -126,17 +145,33 @@ describe('ProductController (e2e)', () => {
 		});
 
 		it('fail - get product by fake id', async () => {
-			return request(app.getHttpServer()).get(`/product/${fakeId}`).expect(404, {
-				statusCode: 404,
-				message: ProductErrorMessages.PRODUCT_NOT_FOUND,
-			});
+			return request(app.getHttpServer())
+				.get(`/product/${fakeId}`)
+				.set('Authorization', 'Bearer ' + token)
+				.expect(404, {
+					statusCode: 404,
+					message: ProductErrorMessages.PRODUCT_NOT_FOUND,
+				});
 		});
 
 		it('fail - get product by invalid id', async () => {
-			return request(app.getHttpServer()).get(`/product/${123}`).expect(400, {
-				statusCode: 400,
-				message: CommonErrorMessages.ID_VALIDATION_ERROR,
-			});
+			return request(app.getHttpServer())
+				.get(`/product/${123}`)
+				.set('Authorization', 'Bearer ' + token)
+				.expect(400, {
+					statusCode: 400,
+					message: CommonErrorMessages.ID_VALIDATION_ERROR,
+				});
+		});
+
+		it('fail - get product with invalid token', async () => {
+			return request(app.getHttpServer())
+				.get(`/product/${123}`)
+				.set('Authorization', 'Bearer ' + 'token')
+				.expect(401, {
+					statusCode: 401,
+					message: 'Unauthorized',
+				});
 		});
 	});
 
@@ -148,6 +183,7 @@ describe('ProductController (e2e)', () => {
 		it('success - putch product', async () => {
 			return request(app.getHttpServer())
 				.patch(`/product/${productId}`)
+				.set('Authorization', 'Bearer ' + token)
 				.send(updateProductDto)
 				.expect(200)
 				.then(({ body }: request.Response) => {
@@ -156,37 +192,72 @@ describe('ProductController (e2e)', () => {
 		});
 
 		it('fail - putch product by fake id', async () => {
-			return request(app.getHttpServer()).patch(`/product/${fakeId}`).expect(404, {
-				statusCode: 404,
-				message: ProductErrorMessages.PRODUCT_NOT_FOUND,
-			});
+			return request(app.getHttpServer())
+				.patch(`/product/${fakeId}`)
+				.set('Authorization', 'Bearer ' + token)
+				.expect(404, {
+					statusCode: 404,
+					message: ProductErrorMessages.PRODUCT_NOT_FOUND,
+				});
 		});
 
 		it('fail - putch product by invalid id', async () => {
-			return request(app.getHttpServer()).patch(`/product/${123}`).expect(400, {
-				statusCode: 400,
-				message: CommonErrorMessages.ID_VALIDATION_ERROR,
-			});
+			return request(app.getHttpServer())
+				.patch(`/product/${123}`)
+				.set('Authorization', 'Bearer ' + token)
+				.expect(400, {
+					statusCode: 400,
+					message: CommonErrorMessages.ID_VALIDATION_ERROR,
+				});
+		});
+
+		it('fail - putch product with invalid token', async () => {
+			return request(app.getHttpServer())
+				.patch(`/product/${123}`)
+				.set('Authorization', 'Bearer ' + 'token')
+				.expect(401, {
+					statusCode: 401,
+					message: 'Unauthorized',
+				});
 		});
 	});
 
 	describe('/product/:id (DELETE)', () => {
 		it('success - delete product by id', async () => {
-			return request(app.getHttpServer()).delete(`/product/${productId}`).expect(200);
+			return request(app.getHttpServer())
+				.delete(`/product/${productId}`)
+				.set('Authorization', 'Bearer ' + token)
+				.expect(200);
 		});
 
 		it('fail - delete product by fake id', async () => {
-			return request(app.getHttpServer()).delete(`/product/${fakeId}`).expect(404, {
-				statusCode: 404,
-				message: ProductErrorMessages.PRODUCT_NOT_FOUND,
-			});
+			return request(app.getHttpServer())
+				.delete(`/product/${fakeId}`)
+				.set('Authorization', 'Bearer ' + token)
+				.expect(404, {
+					statusCode: 404,
+					message: ProductErrorMessages.PRODUCT_NOT_FOUND,
+				});
 		});
 
-		it('fail - get product by invalid id', async () => {
-			return request(app.getHttpServer()).patch(`/product/${123}`).expect(400, {
-				statusCode: 400,
-				message: CommonErrorMessages.ID_VALIDATION_ERROR,
-			});
+		it('fail - delete product by invalid id', async () => {
+			return request(app.getHttpServer())
+				.patch(`/product/${123}`)
+				.set('Authorization', 'Bearer ' + token)
+				.expect(400, {
+					statusCode: 400,
+					message: CommonErrorMessages.ID_VALIDATION_ERROR,
+				});
+		});
+
+		it('fail - delete product with invalid token', async () => {
+			return request(app.getHttpServer())
+				.patch(`/product/${123}`)
+				.set('Authorization', 'Bearer ' + 'token')
+				.expect(401, {
+					statusCode: 401,
+					message: 'Unauthorized',
+				});
 		});
 	});
 });

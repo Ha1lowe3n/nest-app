@@ -1,5 +1,6 @@
 export const CommonErrorMessages = {
 	ID_VALIDATION_ERROR: 'Неверный формат ID',
+	UNAUTHORIZED: 'Вы не авторизованы',
 };
 
 export const ReviewErrorMessages = {
@@ -25,4 +26,5 @@ export const ProductErrorMessages = {
 
 export const PageErrorMessages = {
 	PAGE_NOT_FOUND: 'Страница не найдена',
+	PAGES_NOT_FOUND: 'Страницы не найдены',
 };

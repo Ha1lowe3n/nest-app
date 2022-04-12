@@ -1,4 +1,4 @@
-import { prop } from '@typegoose/typegoose';
+import { index, prop } from '@typegoose/typegoose';
 import { Base, TimeStamps } from '@typegoose/typegoose/lib/defaultClasses';
 
 export enum PageCategories {
@@ -30,6 +30,8 @@ class Advantage {
 }
 
 export interface PageModel extends Base {}
+
+@index({ '$**': 'text' })
 export class PageModel extends TimeStamps {
 	@prop({ enum: PageCategories })
 	pageCategory: PageCategories;
@@ -41,15 +43,18 @@ export class PageModel extends TimeStamps {
 	alias: string;
 
 	@prop()
+	category: string;
+
+	@prop()
 	title: string;
 
 	@prop()
 	productsCategory: string;
 
-	@prop()
+	@prop({ _id: false })
 	hh?: HHData;
 
-	@prop({ type: () => Advantage })
+	@prop({ type: () => Advantage, _id: false })
 	advantages: Advantage[];
 
 	@prop()

@@ -66,4 +66,9 @@ export class PageController {
 	async delete(@Param('id', IdValidationPipe) id: string): Promise<DocumentType<PageModel>> {
 		return await this.pageService.deleteById(id);
 	}
+
+	@Get('textSearch/:text')
+	async textSearch(@Param('text') text: string): Promise<DocumentType<PageModel>[]> {
+		return this.pageService.findByText(text);
+	}
 }
