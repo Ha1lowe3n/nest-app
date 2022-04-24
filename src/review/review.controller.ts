@@ -16,15 +16,32 @@ import { DocumentType } from '@typegoose/typegoose/lib/types';
 import { ReviewModel } from './review.model';
 import { AuthGuard } from '@nestjs/passport';
 import { IdValidationPipe } from '../pipes/id-validation.pipe';
+import { TelegramService } from 'src/telegram/telegram.service';
 
 @Controller('review')
 export class ReviewController {
-	constructor(private readonly reviewService: ReviewService) {}
+	constructor(
+		private readonly reviewService: ReviewService,
+		private readonly telegramService: TelegramService,
+	) {}
 
 	@UsePipes(new ValidationPipe())
 	@Post('create')
 	async create(@Body() dto: CreateReviewDto): Promise<DocumentType<ReviewModel>> {
 		return await this.reviewService.create(dto);
+	}
+
+	@UsePipes(new ValidationPipe())
+	@Post('notify')
+	async notify(@Body() dto: CreateReviewDto): Promise<void> {
+		const message =
+			`Имя: ${dto.authorName}\n` +
+			`Заголовок: ${dto.title}\n` +
+			`Описание: ${dto.description}\n` +
+			`Рейтинг: ${dto.rating}\n` +
+			`ID Продукта: ${dto.productId}`;
+
+		return await this.telegramService.sendMessage(message);
 	}
 
 	@UseGuards(AuthGuard('jwt'))

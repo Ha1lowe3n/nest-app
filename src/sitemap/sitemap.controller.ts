@@ -40,7 +40,6 @@ export class SitemapController {
 		];
 
 		const pages = await this.pageService.findAll();
-		console.log(pages);
 		res = res.concat(
 			pages.map((page) => ({
 				loc: `${this.domain}/${CATEGORY_URL[page.pageCategory]}/${page.alias}`,

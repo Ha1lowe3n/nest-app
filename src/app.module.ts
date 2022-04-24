@@ -9,6 +9,8 @@ import { ProductModule } from './product/product.module';
 import { ReviewModule } from './review/review.module';
 import { FilesModule } from './files/files.module';
 import { SitemapModule } from './sitemap/sitemap.module';
+import { TelegramModule } from './telegram/telegram.module';
+import { getTelegramConfig } from './configs/telegram.config';
 
 @Module({
 	imports: [
@@ -16,6 +18,10 @@ import { SitemapModule } from './sitemap/sitemap.module';
 		TypegooseModule.forRootAsync({
 			inject: [ConfigService],
 			useFactory: getMongoConfig,
+		}),
+		TelegramModule.forRootAsync({
+			inject: [ConfigService],
+			useFactory: getTelegramConfig,
 		}),
 		AuthModule,
 		PageModule,
