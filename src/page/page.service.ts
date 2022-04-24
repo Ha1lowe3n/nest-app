@@ -22,6 +22,10 @@ export class PageService {
 		return page;
 	}
 
+	async findAll(): Promise<DocumentType<PageModel>[]> {
+		return await this.pageModel.find({});
+	}
+
 	async updateById(id: string, dto: UpdatePageDto): Promise<DocumentType<PageModel>> {
 		const page = await this.pageModel.findByIdAndUpdate(id, dto, { new: true });
 		if (!page) {
